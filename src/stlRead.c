@@ -13,7 +13,7 @@ static void fileReadError(void)
 	exit(-1);
 }
 
-void stlRead(const char *stlFilename, uint32_t *numTriangles, float **vertices)
+void stlRead(const char *stlFilename, uint32_t *numTriangles, float **vertices, float *maxDist)
 {
 	FILE *fid = fopen(stlFilename, "rb");
 	if (!fid)
@@ -45,14 +45,15 @@ void stlRead(const char *stlFilename, uint32_t *numTriangles, float **vertices)
 	*vertices = (float*)malloc(*numTriangles * 9 * sizeof(float));
 
 	// Copy only the triangle vertices. Ignore normal vector and additionals.
+	*maxDist = 0.0f;
 	for (int i = 0; i < *numTriangles; ++i) {
 		// Loop over the 9 floats per each triangle.
 		float *temp = (float*)(buffer + STL_TRI_SIZE*i);
 		for (int j = 0; j < 9; ++j) {
 			*(*vertices + 9*i + j) = temp[j + 3]; // offset to avoid normals.
-			if (isnan(*(*vertices + 9*i + j))) {
-				printf("vertice is NAN\n");
-			}
+
+			if (abs(temp[j + 3]) > *maxDist)
+				*maxDist = fabsf(temp[j + 3]);
 		}
 	}
 	free(buffer);

@@ -15,6 +15,8 @@ static unsigned _shaderProgram;
 static unsigned _VBO, _VAO;
 
 static uint32_t _numTriangles;
+static float _scale;
+static float _colorPeriod;
 
 void renderInit(const char *stlFilename, const char *vertexSourceFile, const char* fragSourceFile)
 {
@@ -27,7 +29,10 @@ void renderInit(const char *stlFilename, const char *vertexSourceFile, const cha
 	);
 
 	float *vertices;
-	stlRead(stlFilename, &_numTriangles, &vertices);
+	float maxDist;
+	stlRead(stlFilename, &_numTriangles, &vertices, &maxDist);
+	_scale = (1.0f / maxDist) * 0.9f;
+	_colorPeriod = maxDist / 6.0f;
 
 	glGenVertexArrays(1, &_VAO);
 	glGenBuffers(1, &_VBO);
@@ -65,7 +70,7 @@ void renderLoop(float aspectRatio, float horzDeltaRad, float vertDeltaRad)
 	glm_translate_z(modelMat, -2.0f);
 	glm_rotate_x(modelMat, vertTheta, modelMat);
 	glm_rotate_y(modelMat, horzTheta, modelMat);
-	glm_scale_uni(modelMat, 0.25f);
+	glm_scale_uni(modelMat, _scale);
 
 	mat4 perspectiveMat;
 	glm_perspective(glm_rad(45.0f), aspectRatio, 0.1f, 100.0f, perspectiveMat);
@@ -77,7 +82,9 @@ void renderLoop(float aspectRatio, float horzDeltaRad, float vertDeltaRad)
 	glBindVertexArray(_VAO);
 
 	int transLocation = glGetUniformLocation(_shaderProgram, "transMat");
+	int colorPeriodLocation = glGetUniformLocation(_shaderProgram, "colorPeriod");
 	glUniformMatrix4fv(transLocation, 1, GL_FALSE, (float*)transMatrix);
+	glUniform1f(colorPeriodLocation, _colorPeriod);
 
 	glDrawArrays(GL_TRIANGLES, 0, 3*_numTriangles);
 	glBindVertexArray(0);
