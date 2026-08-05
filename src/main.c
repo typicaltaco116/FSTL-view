@@ -64,9 +64,12 @@ int main(int argc, char **argv)
 	strcat(fragSourceFile, "/basic.frag");
 	renderInit(stl_filename, vertexSourceFile, fragSourceFile);
 
-	float toggleDebounceTime = 0.0f;
+	float rotateToggleDbTime = 0.0f;
+	float wireframeToggleDbTime = 0.0f;
 	float prevTimeValue = 0.0f;
 	bool useManualRotationInput = false;
+	bool useWireframe = true;
+	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
 	while (!glfwWindowShouldClose(window)) {
 		processInput(window);
@@ -79,11 +82,23 @@ int main(int argc, char **argv)
 		float deltaTime = timeValue - prevTimeValue;
 		prevTimeValue = timeValue;
 
-		toggleDebounceTime += deltaTime;
+		wireframeToggleDbTime += deltaTime;
+		if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS 
+				&& wireframeToggleDbTime > DEBOUNCE_THRESHOLD_MS / 1000.0f) {
+			wireframeToggleDbTime = 0.0f;
+
+			useWireframe = !useWireframe;
+			if (useWireframe)
+				glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+			else
+				glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+		}
+
+		rotateToggleDbTime += deltaTime;
 		if (glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS 
-				&& toggleDebounceTime > DEBOUNCE_THRESHOLD_MS / 1000.0f) {
+				&& rotateToggleDbTime > DEBOUNCE_THRESHOLD_MS / 1000.0f) {
 			useManualRotationInput = !useManualRotationInput;
-			toggleDebounceTime = 0.0f;
+			rotateToggleDbTime = 0.0f;
 		}
 
 		// Handle vertical rotation amount.
