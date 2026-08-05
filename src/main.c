@@ -52,7 +52,7 @@ int main(int argc, char **argv)
 	char fragSourceFile[64];
 	strcpy(vertexSourceFile, shader_dir);
 	strcpy(fragSourceFile, shader_dir);
-	strcat(vertexSourceFile, "/rotate.vert");
+	strcat(vertexSourceFile, "/basicTransform.vert");
 	strcat(fragSourceFile, "/basic.frag");
 	renderInit(vertexSourceFile, fragSourceFile);
 

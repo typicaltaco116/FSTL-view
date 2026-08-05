@@ -53,21 +53,24 @@ void renderLoop(void)
 	glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT);
 
-	// Build rotation matrix.
+	// Build transformation matrix.
 	float timeValue = glfwGetTime();
 	float period = 4.0f; // seconds
 	float theta = 2.0f * M_PI * (1.0f/period) * timeValue;
-	vec3 dir;
-	dir[0] = 0.0f; dir[1] = 1.0f; dir[2] = -0.2f;
-	glm_vec3_normalize(dir);
-	int rotAxisLocation = glGetUniformLocation(shaderProgram, "dir");
-	int thetaLocation = glGetUniformLocation(shaderProgram, "theta");
+	float scale = 0.25f;
+
+	mat4 transMat;
+	glm_mat4_identity(transMat);
+	glm_scale_uni(transMat, scale);
+	glm_rotate_x(transMat, M_PI/6.0f, transMat);
+	glm_rotate_y(transMat, theta, transMat);
+
+	int transLocation = glGetUniformLocation(shaderProgram, "transMat");
 
 	glUseProgram(shaderProgram);
 	glBindVertexArray(VAO);
 
-	glUniform3fv(rotAxisLocation, 1, (float*)dir);
-	glUniform1f(thetaLocation, theta);
+	glUniformMatrix4fv(transLocation, 1, GL_FALSE, (float*)transMat);
 
 	glDrawArrays(GL_TRIANGLES, 0, 3*numTriangles);
 	glBindVertexArray(0);
