@@ -1,11 +1,17 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
+#include <cglm/cglm.h> 
 
 #include <internal/abstrShader.h>
 #include <internal/render.h>
 
 #include <stdio.h>
 #include <string.h>
+#include <math.h>
+#include <stdbool.h>
+
+#define INPUT_ROTATION_SPEED_RPS (35)
+#define DEBOUNCE_THRESHOLD_MS (200)
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void processInput(GLFWwindow *window);
@@ -57,13 +63,43 @@ int main(int argc, char **argv)
 	strcat(fragSourceFile, "/basic.frag");
 	renderInit(stl_filename, vertexSourceFile, fragSourceFile);
 
+	float toggleDebounceTime = 0.0f;
+
 	while (!glfwWindowShouldClose(window)) {
 		processInput(window);
 
 		int width, height;
 		glfwGetWindowSize(window, &width, &height);
 		float aspectRatio = (float)width / (float)height;
-		renderLoop(aspectRatio);
+
+		static float prevTimeValue = 0.0f;
+		float timeValue = glfwGetTime();
+		float deltaTime = timeValue - prevTimeValue;
+		prevTimeValue = timeValue;
+
+		float deltaRad = 0.0f;
+
+		static bool useManualRotationInput = false;
+		toggleDebounceTime += deltaTime;
+		if (glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS 
+				&& toggleDebounceTime > DEBOUNCE_THRESHOLD_MS / 1000.0f) {
+			useManualRotationInput = !useManualRotationInput;
+			toggleDebounceTime = 0.0f;
+		}
+
+		if (useManualRotationInput) {
+			if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS)
+				deltaRad = glm_rad(INPUT_ROTATION_SPEED_RPS) * deltaTime;
+			else if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS)
+				deltaRad = glm_rad(-INPUT_ROTATION_SPEED_RPS) * deltaTime;
+		}
+		else {
+			float period = 4.0f; // seconds
+			deltaRad = 2.0f * M_PI * (1.0f/period) * deltaTime;
+		}
+
+
+		renderLoop(aspectRatio, deltaRad);
 
 		glfwSwapBuffers(window);
 		glfwPollEvents();
