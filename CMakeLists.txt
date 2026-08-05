@@ -24,6 +24,7 @@ set(INCLUDES
 set(LIBRARIES
 	glad
 	glfw
+    m
 )
 
 add_executable(${PROJECT_NAME} ${SOURCES})
