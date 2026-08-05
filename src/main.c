@@ -40,7 +40,7 @@ int main(int argc, char **argv)
 
 	// glfw window creation
 	// --------------------
-	GLFWwindow* window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "LearnOpenGL", NULL, NULL);
+	GLFWwindow* window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "fstl-view", NULL, NULL);
 	if (window == NULL) {
 		printf("Failed to create GLFW window\n");
 		glfwTerminate();
@@ -90,8 +90,11 @@ int main(int argc, char **argv)
 			useWireframe = !useWireframe;
 			if (useWireframe)
 				glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-			else
+			else {
 				glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+				glCullFace(GL_BACK);
+				glEnable(GL_CULL_FACE);
+			}
 		}
 
 		rotateToggleDbTime += deltaTime;

@@ -46,12 +46,13 @@ void renderInit(const char *stlFilename, const char *vertexSourceFile, const cha
 
 	// uncomment this call to draw in wireframe polygons.
 	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+	glEnable(GL_DEPTH_TEST);
 }
 
 void renderLoop(float aspectRatio, float horzDeltaRad, float vertDeltaRad)
 {
 	glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
-	glClear(GL_COLOR_BUFFER_BIT);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	static float horzTheta = 0.0f;
 	static float vertTheta = 0.0f;
