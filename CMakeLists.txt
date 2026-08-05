@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.16)
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/bin)
 
-project(stl-view LANGUAGES C)
+project(fstl-view LANGUAGES C)
 set(PROJECT_HOME ${CMAKE_CURRENT_SOURCE_DIR})
 
 set(SOURCES
