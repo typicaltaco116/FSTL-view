@@ -31,6 +31,7 @@ int main(int argc, char **argv)
 	char *stl_filename = argv[1];
 	char *shader_dir = argv[2];
 
+	// ------------------------------
 	// glfw: initialize and configure
 	// ------------------------------
 	glfwInit();
@@ -38,6 +39,7 @@ int main(int argc, char **argv)
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
+	// --------------------
 	// glfw window creation
 	// --------------------
 	GLFWwindow* window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "fstl-view", NULL, NULL);
@@ -48,7 +50,9 @@ int main(int argc, char **argv)
 	}
 	glfwMakeContextCurrent(window);
 	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+	glfwSwapInterval(1); // enable V-Sync.
 
+	// ---------------------------------------
 	// glad: load all OpenGL function pointers
 	// ---------------------------------------
 	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
