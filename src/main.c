@@ -1,8 +1,8 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
-#include "abstrShader.h"
-#include "render.h"
+#include <internal/abstrShader.h>
+#include <internal/render.h>
 
 #include <stdio.h>
 #include <string.h>

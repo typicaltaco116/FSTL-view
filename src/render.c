@@ -1,8 +1,8 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
-#include "abstrShader.h"
-#include "stlRead.h"
+#include <internal/abstrShader.h>
+#include <internal/stlRead.h>
 
 #include <cglm/cglm.h>
 #include <math.h>
@@ -58,7 +58,7 @@ void renderLoop(void)
 	float period = 4.0f; // seconds
 	float theta = 2.0f * M_PI * (1.0f/period) * timeValue;
 	vec3 dir;
-	dir[0] = 0.0f; dir[1] = 1.0f; dir[2] = 0.0f;
+	dir[0] = 0.0f; dir[1] = 1.0f; dir[2] = -0.2f;
 	glm_vec3_normalize(dir);
 	int rotAxisLocation = glGetUniformLocation(shaderProgram, "dir");
 	int thetaLocation = glGetUniformLocation(shaderProgram, "theta");

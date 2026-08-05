@@ -1,4 +1,4 @@
-#include "stlRead.h"
+#include <internal/stlRead.h>
 
 #include <stdio.h>
 #include <stdlib.h>

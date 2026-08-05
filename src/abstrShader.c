@@ -1,5 +1,5 @@
 // Primary Header
-#include "abstrShader.h"
+#include <internal/abstrShader.h>
 
 // OpenGL API Headers
 #include <glad/glad.h>
