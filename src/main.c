@@ -10,8 +10,9 @@
 #include <math.h>
 #include <stdbool.h>
 
-#define INPUT_ROTATION_SPEED_RPS (35)
-#define DEBOUNCE_THRESHOLD_MS (200)
+#define INPUT_ROTATION_SPEED_RPS	(35.0f)
+#define AUTO_ROTATION_PERIOD_S		(4.0f)
+#define DEBOUNCE_THRESHOLD_MS		(200.0f)
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void processInput(GLFWwindow *window);
@@ -64,6 +65,8 @@ int main(int argc, char **argv)
 	renderInit(stl_filename, vertexSourceFile, fragSourceFile);
 
 	float toggleDebounceTime = 0.0f;
+	float prevTimeValue = 0.0f;
+	bool useManualRotationInput = false;
 
 	while (!glfwWindowShouldClose(window)) {
 		processInput(window);
@@ -72,14 +75,10 @@ int main(int argc, char **argv)
 		glfwGetWindowSize(window, &width, &height);
 		float aspectRatio = (float)width / (float)height;
 
-		static float prevTimeValue = 0.0f;
 		float timeValue = glfwGetTime();
 		float deltaTime = timeValue - prevTimeValue;
 		prevTimeValue = timeValue;
 
-		float deltaRad = 0.0f;
-
-		static bool useManualRotationInput = false;
 		toggleDebounceTime += deltaTime;
 		if (glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS 
 				&& toggleDebounceTime > DEBOUNCE_THRESHOLD_MS / 1000.0f) {
@@ -87,19 +86,26 @@ int main(int argc, char **argv)
 			toggleDebounceTime = 0.0f;
 		}
 
+		// Handle vertical rotation amount.
+		float vertDeltaRad = 0.0f;
+		if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)
+			vertDeltaRad = glm_rad(INPUT_ROTATION_SPEED_RPS) * deltaTime;
+		else if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)
+			vertDeltaRad = glm_rad(-INPUT_ROTATION_SPEED_RPS) * deltaTime;
+
+		// Handle horizontal rotation amount.
+		float horzDeltaRad = 0.0f;
 		if (useManualRotationInput) {
 			if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS)
-				deltaRad = glm_rad(INPUT_ROTATION_SPEED_RPS) * deltaTime;
+				horzDeltaRad = glm_rad(INPUT_ROTATION_SPEED_RPS) * deltaTime;
 			else if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS)
-				deltaRad = glm_rad(-INPUT_ROTATION_SPEED_RPS) * deltaTime;
+				horzDeltaRad = glm_rad(-INPUT_ROTATION_SPEED_RPS) * deltaTime;
 		}
 		else {
-			float period = 4.0f; // seconds
-			deltaRad = 2.0f * M_PI * (1.0f/period) * deltaTime;
+			horzDeltaRad = 2.0f * M_PI * (1.0f/AUTO_ROTATION_PERIOD_S) * deltaTime;
 		}
 
-
-		renderLoop(aspectRatio, deltaRad);
+		renderLoop(aspectRatio, horzDeltaRad, vertDeltaRad);
 
 		glfwSwapBuffers(window);
 		glfwPollEvents();

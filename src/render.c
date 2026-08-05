@@ -48,20 +48,22 @@ void renderInit(const char *stlFilename, const char *vertexSourceFile, const cha
 	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 }
 
-void renderLoop(float aspectRatio, float deltaRad)
+void renderLoop(float aspectRatio, float horzDeltaRad, float vertDeltaRad)
 {
 	glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT);
 
-	static float theta = 0.0f;
-	theta += deltaRad;
+	static float horzTheta = 0.0f;
+	static float vertTheta = 0.0f;
+	horzTheta += horzDeltaRad;
+	vertTheta += vertDeltaRad;
 
 	mat4 modelMat;
 	glm_mat4_identity(modelMat);
 	glm_translate_y(modelMat, -0.5f);
 	glm_translate_z(modelMat, -2.0f);
-	glm_rotate_x(modelMat, glm_rad(15.0f), modelMat);
-	glm_rotate_y(modelMat, theta, modelMat);
+	glm_rotate_x(modelMat, vertTheta, modelMat);
+	glm_rotate_y(modelMat, horzTheta, modelMat);
 	glm_scale_uni(modelMat, 0.25f);
 
 	mat4 perspectiveMat;
