@@ -16,7 +16,7 @@ static unsigned VBO, VAO;
 
 static uint32_t numTriangles;
 
-void renderInit(const char *vertexSourceFile, const char* fragSourceFile)
+void renderInit(const char *stlFilename, const char *vertexSourceFile, const char* fragSourceFile)
 {
 	vertexShader = abstrShaderConstruct(GL_VERTEX_SHADER, vertexSourceFile);
 	fragmentShader = abstrShaderConstruct(GL_FRAGMENT_SHADER, fragSourceFile);
@@ -27,7 +27,7 @@ void renderInit(const char *vertexSourceFile, const char* fragSourceFile)
 	);
 
 	float *vertices;
-	stlRead("teapot.stl", &numTriangles, &vertices);
+	stlRead(stlFilename, &numTriangles, &vertices);
 
 	glGenVertexArrays(1, &VAO);
 	glGenBuffers(1, &VBO);

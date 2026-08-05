@@ -17,11 +17,12 @@ const unsigned int SCR_HEIGHT = 600;
 int main(int argc, char **argv)
 {
 	// Handle Arguments
-	if (argc != 2) {
-		printf("Usage %s <Shader Directory>\n", argv[0]);
+	if (argc != 3) {
+		printf("Usage %s <Target STL> <Shader Directory>\n", argv[0]);
 		return -1;
 	}
-	char *shader_dir = argv[1];
+	char *stl_filename = argv[1];
+	char *shader_dir = argv[2];
 
 	// glfw: initialize and configure
 	// ------------------------------
@@ -54,7 +55,7 @@ int main(int argc, char **argv)
 	strcpy(fragSourceFile, shader_dir);
 	strcat(vertexSourceFile, "/basicTransform.vert");
 	strcat(fragSourceFile, "/basic.frag");
-	renderInit(vertexSourceFile, fragSourceFile);
+	renderInit(stl_filename, vertexSourceFile, fragSourceFile);
 
 	while (!glfwWindowShouldClose(window)) {
 		processInput(window);
