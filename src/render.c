@@ -48,7 +48,7 @@ void renderInit(const char *vertexSourceFile, const char* fragSourceFile)
 	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 }
 
-void renderLoop(void)
+void renderLoop(float aspectRatio)
 {
 	glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT);
@@ -59,11 +59,19 @@ void renderLoop(void)
 	float theta = 2.0f * M_PI * (1.0f/period) * timeValue;
 	float scale = 0.25f;
 
+	mat4 modelMat;
+	glm_mat4_identity(modelMat);
+	glm_translate_y(modelMat, -0.5f);
+	glm_translate_z(modelMat, -2.0f);
+	glm_rotate_x(modelMat, glm_rad(15.0f), modelMat);
+	glm_rotate_y(modelMat, theta, modelMat);
+	glm_scale_uni(modelMat, scale);
+
+	mat4 perspectiveMat;
+	glm_perspective(glm_rad(45.0f), aspectRatio, 0.1f, 100.0f, perspectiveMat);
+
 	mat4 transMat;
-	glm_mat4_identity(transMat);
-	glm_scale_uni(transMat, scale);
-	glm_rotate_x(transMat, M_PI/6.0f, transMat);
-	glm_rotate_y(transMat, theta, transMat);
+	glm_mat4_mul(perspectiveMat, modelMat, transMat);
 
 	int transLocation = glGetUniformLocation(shaderProgram, "transMat");
 

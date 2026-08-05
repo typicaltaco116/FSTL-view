@@ -58,7 +58,11 @@ int main(int argc, char **argv)
 
 	while (!glfwWindowShouldClose(window)) {
 		processInput(window);
-		renderLoop();
+
+		int width, height;
+		glfwGetWindowSize(window, &width, &height);
+		float aspectRatio = (float)width / (float)height;
+		renderLoop(aspectRatio);
 
 		glfwSwapBuffers(window);
 		glfwPollEvents();
