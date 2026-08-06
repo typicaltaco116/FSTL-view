@@ -66,6 +66,9 @@ int main(int argc, char **argv)
 		return -1;
 	}
 
+    // Initialize OpenGL viewport.
+	glViewport(0, 0, SCR_WIDTH, SCR_HEIGHT);
+
 	char vertexSourceFile[64];
     char geoSourceFile[64];
 	char fragSourceFile[64];
