@@ -17,7 +17,7 @@ vec3 modelPos = {0.0f, 0.0f, 0.0f};
 
 static unsigned _shaderProgram;
 static unsigned _VAO;
-static unsigned _VBOs[2];
+static unsigned _VBO;
 static uint32_t _numTriangles;
 static float _scale;
 static float _colorPeriod;
@@ -34,6 +34,7 @@ void renderInit(const char *stlFilename, const char *vertexSourceFile, const cha
 
 	// Open STL and extract normals and vertices.
 	stl_data_t stl = stlRead(stlFilename);
+    free(stl.normals); // dump normals because they are usually bad ):
 	_numTriangles = stl.polyCount;
 
 	// Find maximum coordinate component.
@@ -52,9 +53,8 @@ void renderInit(const char *stlFilename, const char *vertexSourceFile, const cha
 	glBindVertexArray(_VAO);
 
     // Generate VBOs.
-    glGenBuffers(2, _VBOs);
-    unsigned vertexVBO = _VBOs[0];
-    unsigned normalVBO = _VBOs[1];
+    glGenBuffers(1, &_VBO);
+    unsigned vertexVBO = _VBO;
 
     // Allocate and copy vertices to VBO.
 	glBindBuffer(GL_ARRAY_BUFFER, vertexVBO);
@@ -62,24 +62,6 @@ void renderInit(const char *stlFilename, const char *vertexSourceFile, const cha
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
 	glEnableVertexAttribArray(0);
     free(stl.vertices);
-
-    // Duplicate each normal for normal buffer to be same size as vertices.
-    float *dupNormals = (float*)malloc(stl.polyCount*9*sizeof(float));
-    for (int i = 0; i < stl.polyCount; ++i) {
-        float *dstPtr = dupNormals + i * 9;
-        memcpy(dstPtr + 0, stl.normals + i * 3, 3 * sizeof(float));
-        memcpy(dstPtr + 3, stl.normals + i * 3, 3 * sizeof(float));
-        memcpy(dstPtr + 6, stl.normals + i * 3, 3 * sizeof(float));
-    }
-    free(stl.normals);
-
-    // Allocate and copy normals to VBO.
-    glGenBuffers(1, &normalVBO);
-    glBindBuffer(GL_ARRAY_BUFFER, normalVBO);
-	glBufferData(GL_ARRAY_BUFFER, stl.polyCount*9*sizeof(float), dupNormals, GL_STATIC_DRAW);
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
-    glEnableVertexAttribArray(1);
-    free(dupNormals);
 
     // Unbind VAO.
 	glBindVertexArray(0); 
@@ -135,7 +117,7 @@ void renderLoop(float aspectRatio, float horzDeltaRad, float vertDeltaRad)
 void renderTerminate(void)
 {
 	glDeleteVertexArrays(1, &_VAO);
-	glDeleteBuffers(2, _VBOs);
+	glDeleteBuffers(1, &_VBO);
 	glDeleteProgram(_shaderProgram);
 
 	glfwTerminate();
