@@ -67,7 +67,9 @@ int main(int argc, char **argv)
 	}
 
     // Initialize OpenGL viewport.
-	glViewport(0, 0, SCR_WIDTH, SCR_HEIGHT);
+    int width, height;
+    glfwGetFramebufferSize(window, &width, &height);
+	glViewport(0, 0, width, height);
 
 	char vertexSourceFile[64];
     char geoSourceFile[64];
