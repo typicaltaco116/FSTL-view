@@ -71,22 +71,24 @@ void renderInit(const char *stlFilename, const char *vertexSourceFile, const cha
 	glEnable(GL_DEPTH_TEST);
 }
 
-void renderLoop(float aspectRatio, float horzDeltaRad, float vertDeltaRad)
+void renderLoop(float aspectRatio, float horzDeltaRad, float vertDeltaRad, float deltaScale)
 {
 	glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	static float horzTheta = 0.0f;
 	static float vertTheta = 0.0f;
+    static float localScale = 1.0f;
 	horzTheta += horzDeltaRad;
 	vertTheta += vertDeltaRad;
+    localScale += deltaScale;
 
 	mat4 modelMat;
 	glm_mat4_identity(modelMat);
     glm_translate(modelMat, modelPos);
 	glm_rotate_x(modelMat, vertTheta, modelMat);
 	glm_rotate_y(modelMat, horzTheta, modelMat);
-	glm_scale_uni(modelMat, _scale);
+	glm_scale_uni(modelMat, _scale * localScale);
 
     mat4 viewMat;
     glm_mat4_identity(viewMat);
