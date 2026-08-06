@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
+#include <string.h>
 
 #define STL_TRI_SIZE (50)
 
@@ -12,7 +13,7 @@ static void fileReadError(void)
 	exit(-1);
 }
 
-void stlRead(const char *stlFilename, uint32_t *numTriangles, char **data)
+stl_data_t stlRead(const char *stlFilename)
 {
 	FILE *fid = fopen(stlFilename, "rb");
 	if (!fid)
@@ -21,13 +22,14 @@ void stlRead(const char *stlFilename, uint32_t *numTriangles, char **data)
 	fseek(fid, 80, SEEK_SET);
 	
 	size_t readCount;
-	readCount = fread(numTriangles, sizeof(uint32_t), 1, fid);
+	uint32_t numTriangles;
+	readCount = fread(&numTriangles, sizeof(uint32_t), 1, fid);
 	if (!readCount)
 		fileReadError();
 
-	*data = (char*)malloc(*numTriangles * STL_TRI_SIZE);
-	readCount = fread(*data, STL_TRI_SIZE, *numTriangles, fid);
-	if (readCount < *numTriangles) {
+	char *buffer = (char*)malloc(numTriangles * STL_TRI_SIZE);
+	readCount = fread(buffer, STL_TRI_SIZE, numTriangles, fid);
+	if (readCount < numTriangles) {
 		// MISC ERROR HANDLING.
 		fpos_t pos;
 		fgetpos(fid, &pos);
@@ -40,6 +42,20 @@ void stlRead(const char *stlFilename, uint32_t *numTriangles, char **data)
 		fclose(fid);
 		fileReadError();
 	}
-
 	fclose(fid);
+
+	stl_data_t data;
+	data.polyCount = numTriangles;
+	data.vertices = (float*)malloc(numTriangles * 3 * 3 * sizeof(float));
+	data.normals = (float*)malloc(numTriangles * 3 * sizeof(float));
+
+	for (int i = 0; i < numTriangles; ++i) {
+		char* blockStart = buffer + i * STL_TRI_SIZE;
+		memcpy(data.normals + i, blockStart, 3 * sizeof(float));
+		memcpy(data.vertices + i * 9, (float*)blockStart + 3, 9 * sizeof(float));
+	}
+
+	free(buffer);
+
+	return data;
 }
