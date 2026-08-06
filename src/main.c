@@ -13,9 +13,10 @@
 #define INPUT_ROTATION_SPEED_RPS	(35.0f)
 #define AUTO_ROTATION_PERIOD_S		(4.0f)
 #define DEBOUNCE_THRESHOLD_MS		(200.0f)
+#define MOUSE_SENS                  (0.75f)
 
-void framebuffer_size_callback(GLFWwindow* window, int width, int height);
-void processInput(GLFWwindow *window);
+static void framebuffer_size_callback(GLFWwindow* window, int width, int height);
+static void processInput(GLFWwindow *window);
 
 // settings
 const unsigned int SCR_WIDTH = 800;
@@ -71,11 +72,12 @@ int main(int argc, char **argv)
 	strcat(fragSourceFile, "/basic.fs");
 	renderInit(stl_filename, vertexSourceFile, geoSourceFile, fragSourceFile);
 
-	float rotateToggleDbTime = 0.0f;
+	float autospinToggleDbTime = 0.0f;
 	float wireframeToggleDbTime = 0.0f;
 	float prevTimeValue = 0.0f;
-	bool useManualRotationInput = false;
 	bool useWireframe = true;
+    bool useAutospin = false;
+    bool useManualRotation = false;
 
 	while (!glfwWindowShouldClose(window)) {
 		processInput(window);
@@ -83,6 +85,24 @@ int main(int argc, char **argv)
 		int width, height;
 		glfwGetWindowSize(window, &width, &height);
 		float aspectRatio = (float)width / (float)height;
+
+        static double prevMouseX = 0;
+        static double prevMouseY = 0;
+        double mouseX, mouseY;
+        glfwGetCursorPos(window, &mouseX, &mouseY);
+        double deltaMouseX = mouseX - prevMouseX;
+        double deltaMouseY = mouseY - prevMouseY;
+        prevMouseX = mouseX;
+        prevMouseY = mouseY;
+
+        bool mousePress = glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS;
+        if (mousePress != useManualRotation) {
+            if (mousePress)
+                glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+            else
+                glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+        }
+        useManualRotation = mousePress;
 
 		float timeValue = glfwGetTime();
 		float deltaTime = timeValue - prevTimeValue;
@@ -103,29 +123,24 @@ int main(int argc, char **argv)
 			}
 		}
 
-		rotateToggleDbTime += deltaTime;
+		autospinToggleDbTime += deltaTime;
 		if (glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS 
-				&& rotateToggleDbTime > DEBOUNCE_THRESHOLD_MS / 1000.0f) {
-			useManualRotationInput = !useManualRotationInput;
-			rotateToggleDbTime = 0.0f;
+				&& autospinToggleDbTime > DEBOUNCE_THRESHOLD_MS / 1000.0f) {
+			useAutospin = !useAutospin;
+			autospinToggleDbTime = 0.0f;
 		}
 
 		// Handle vertical rotation amount.
 		float vertDeltaRad = 0.0f;
-		if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)
-			vertDeltaRad = glm_rad(INPUT_ROTATION_SPEED_RPS) * deltaTime;
-		else if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)
-			vertDeltaRad = glm_rad(-INPUT_ROTATION_SPEED_RPS) * deltaTime;
+		if (useManualRotation)
+            vertDeltaRad = MOUSE_SENS * deltaMouseY * deltaTime;
 
 		// Handle horizontal rotation amount.
 		float horzDeltaRad = 0.0f;
-		if (useManualRotationInput) {
-			if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS)
-				horzDeltaRad = glm_rad(INPUT_ROTATION_SPEED_RPS) * deltaTime;
-			else if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS)
-				horzDeltaRad = glm_rad(-INPUT_ROTATION_SPEED_RPS) * deltaTime;
+		if (useManualRotation) {
+            horzDeltaRad = MOUSE_SENS * deltaMouseX * deltaTime;
 		}
-		else {
+		else if (useAutospin) {
 			horzDeltaRad = 2.0f * M_PI * (1.0f/AUTO_ROTATION_PERIOD_S) * deltaTime;
 		}
 
@@ -142,7 +157,7 @@ int main(int argc, char **argv)
 
 // process all input: query GLFW whether relevant keys are pressed/released this frame and react accordingly
 // ---------------------------------------------------------------------------------------------------------
-void processInput(GLFWwindow *window)
+static void processInput(GLFWwindow *window)
 {
 	if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
 		glfwSetWindowShouldClose(window, true);
@@ -150,11 +165,9 @@ void processInput(GLFWwindow *window)
 
 // glfw: whenever the window size changed (by OS or user resize) this callback function executes
 // ---------------------------------------------------------------------------------------------
-void framebuffer_size_callback(GLFWwindow* window, int width, int height)
+static void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 {
 	// make sure the viewport matches the new window dimensions; note that width and 
 	// height will be significantly larger than specified on retina displays.
 	glViewport(0, 0, width, height);
 }
-
-
