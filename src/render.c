@@ -28,18 +28,34 @@ void renderInit(const char *stlFilename, const char *vertexSourceFile, const cha
 		(unsigned[]){_vertexShader, _fragmentShader}
 	);
 
-	float *vertices;
-	float maxDist;
-	stlRead(stlFilename, &_numTriangles, &vertices, &maxDist);
-	_scale = (1.0f / maxDist) * 0.9f;
-	_colorPeriod = maxDist / 6.0f;
+	char *data;
+	stlRead(stlFilename, &_numTriangles, &data);
 
 	glGenVertexArrays(1, &_VAO);
 	glGenBuffers(1, &_VBO);
 	glBindVertexArray(_VAO);
 
+	// Allocate buffer but don't perform copy yet.
 	glBindBuffer(GL_ARRAY_BUFFER, _VBO);
-	glBufferData(GL_ARRAY_BUFFER, _numTriangles*9*sizeof(float), vertices, GL_STATIC_DRAW);
+	size_t elementSize = 9 * sizeof(float);
+	glBufferData(GL_ARRAY_BUFFER, _numTriangles*elementSize, NULL, GL_STATIC_DRAW);
+
+	// Copy into buffer and find maximum coordinate component.
+	float maxCoord = 0.0f;
+	for (int i = 0; i < _numTriangles; ++i) {
+		uintptr_t bufferOffset = i * elementSize;
+		char *srcPtr = data + i * 50 + 3 * sizeof(float);
+		glBufferSubData(GL_ARRAY_BUFFER, bufferOffset, elementSize, srcPtr);
+
+		for (int j = 0; j < 9; ++j) {
+			float component = fabsf(((float*)srcPtr)[j]);
+			if (component > maxCoord)
+				maxCoord = component;
+		}
+	}
+	free(data);
+	_scale = (1.0f / maxCoord) * 0.9f;
+	_colorPeriod = maxCoord / 6.0f;
 
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
 	glEnableVertexAttribArray(0);
@@ -47,7 +63,7 @@ void renderInit(const char *stlFilename, const char *vertexSourceFile, const cha
 	glBindBuffer(GL_ARRAY_BUFFER, 0); 
 
 	glBindVertexArray(0); 
-	free(vertices);
+
 
 	// uncomment this call to draw in wireframe polygons.
 	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
