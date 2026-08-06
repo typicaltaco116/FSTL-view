@@ -102,18 +102,25 @@ void renderLoop(float aspectRatio, float horzDeltaRad, float vertDeltaRad)
 	glm_rotate_y(modelMat, horzTheta, modelMat);
 	glm_scale_uni(modelMat, _scale);
 
+    mat4 viewMat;
+    glm_mat4_identity(viewMat);
+
 	mat4 perspectiveMat;
 	glm_perspective(glm_rad(45.0f), aspectRatio, 0.1f, 100.0f, perspectiveMat);
-
-	mat4 transMatrix;
-	glm_mat4_mul(perspectiveMat, modelMat, transMatrix);
 
 	glUseProgram(_shaderProgram);
 	glBindVertexArray(_VAO);
 
-	int transLocation = glGetUniformLocation(_shaderProgram, "transMat");
+    // Vertex shader uniforms.
+    int modelLocation = glGetUniformLocation(_shaderProgram, "model");
+    int viewLocation = glGetUniformLocation(_shaderProgram, "view");
+    int projectionLocation = glGetUniformLocation(_shaderProgram, "projection");
+    glUniformMatrix4fv(modelLocation, 1, GL_FALSE, (float*)modelMat);
+    glUniformMatrix4fv(viewLocation, 1, GL_FALSE, (float*)viewMat);
+    glUniformMatrix4fv(projectionLocation, 1, GL_FALSE, (float*)perspectiveMat);
+
+    // Fragment shader uniforms.
 	int colorPeriodLocation = glGetUniformLocation(_shaderProgram, "colorPeriod");
-	glUniformMatrix4fv(transLocation, 1, GL_FALSE, (float*)transMatrix);
 	glUniform1f(colorPeriodLocation, _colorPeriod);
 
 	glDrawArrays(GL_TRIANGLES, 0, 3*_numTriangles);
