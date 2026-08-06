@@ -71,3 +71,15 @@ unsigned abstrShaderProgramConstruct(int count, unsigned *shaderIDs)
 
 	return programID;
 }
+
+void abstrShaderSetUniform3fv(unsigned shaderProgram, const char *name, const float *value)
+{
+    int location = glGetUniformLocation(shaderProgram, name);
+    glUniform3fv(location, 1, value);
+}
+
+void abstrShaderSetUniformMatrix4fv(unsigned shaderProgram, const char *name, const float *value)
+{
+    int location = glGetUniformLocation(shaderProgram, name);
+    glUniformMatrix4fv(location, 1, GL_FALSE, value);
+}

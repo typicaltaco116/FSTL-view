@@ -99,16 +99,12 @@ void renderLoop(float aspectRatio, float horzDeltaRad, float vertDeltaRad)
 	glBindVertexArray(_VAO);
 
     // Vertex shader uniforms.
-    int modelLocation = glGetUniformLocation(_shaderProgram, "model");
-    int viewLocation = glGetUniformLocation(_shaderProgram, "view");
-    int projectionLocation = glGetUniformLocation(_shaderProgram, "projection");
-    glUniformMatrix4fv(modelLocation, 1, GL_FALSE, (float*)modelMat);
-    glUniformMatrix4fv(viewLocation, 1, GL_FALSE, (float*)viewMat);
-    glUniformMatrix4fv(projectionLocation, 1, GL_FALSE, (float*)perspectiveMat);
+    abstrShaderSetUniformMatrix4fv(_shaderProgram, "model", (float*)modelMat);
+    abstrShaderSetUniformMatrix4fv(_shaderProgram, "view", (float*)viewMat);
+    abstrShaderSetUniformMatrix4fv(_shaderProgram, "projection", (float*)perspectiveMat);
 
     // Fragment shader uniforms.
-    int lightPosLocation = glGetUniformLocation(_shaderProgram, "lightPos");
-    glUniform3fv(lightPosLocation, 1, (float*)lightPos);
+    abstrShaderSetUniform3fv(_shaderProgram, "lightPos", (float*)lightPos);
 
 	glDrawArrays(GL_TRIANGLES, 0, 3*_numTriangles);
 	glBindVertexArray(0);
