@@ -61,19 +61,21 @@ int main(int argc, char **argv)
 	}
 
 	char vertexSourceFile[64];
+    char geoSourceFile[64];
 	char fragSourceFile[64];
 	strcpy(vertexSourceFile, shader_dir);
+	strcpy(geoSourceFile, shader_dir);
 	strcpy(fragSourceFile, shader_dir);
-	strcat(vertexSourceFile, "/basic.vert");
-	strcat(fragSourceFile, "/basic.frag");
-	renderInit(stl_filename, vertexSourceFile, fragSourceFile);
+	strcat(vertexSourceFile, "/basic.vs");
+	strcat(geoSourceFile, "/normals.gs");
+	strcat(fragSourceFile, "/basic.fs");
+	renderInit(stl_filename, vertexSourceFile, geoSourceFile, fragSourceFile);
 
 	float rotateToggleDbTime = 0.0f;
 	float wireframeToggleDbTime = 0.0f;
 	float prevTimeValue = 0.0f;
 	bool useManualRotationInput = false;
 	bool useWireframe = true;
-	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
 	while (!glfwWindowShouldClose(window)) {
 		processInput(window);

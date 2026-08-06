@@ -6,10 +6,10 @@ uniform mat4 projection;
 uniform mat4 view;
 uniform mat4 model;
 
-out float fragmentDistance;
+out vec3 globalPos;
 
 void main()
 {
-	fragmentDistance = length(aPos);
-	gl_Position = projection * view * model * vec4(aPos, 1.0);
+	globalPos = vec3(model * vec4(aPos, 1.0f));
+	gl_Position = projection * view * vec4(globalPos, 1.0f);
 }

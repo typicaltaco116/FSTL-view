@@ -13,6 +13,7 @@
 vec3 cameraPos = {0.0f, 0.75f, 2.0f};
 vec3 cameraBoresight = {0.0f, 0.5f, 0.0f};
 vec3 modelPos = {0.0f, 0.0f, 0.0f};
+vec3 lightPos = {1.0f, 4.0f, 0.0f};
 #define CAMERA_FOV_DEG (45.0f)
 
 static unsigned _shaderProgram;
@@ -22,14 +23,15 @@ static uint32_t _numTriangles;
 static float _scale;
 static float _colorPeriod;
 
-void renderInit(const char *stlFilename, const char *vertexSourceFile, const char* fragSourceFile)
+void renderInit(const char *stlFilename, const char *vertexSourceFile, const char *geoSourceFile, const char* fragSourceFile)
 {
 	unsigned vertexShader = abstrShaderConstruct(GL_VERTEX_SHADER, vertexSourceFile);
+    unsigned geometryShader = abstrShaderConstruct(GL_GEOMETRY_SHADER, geoSourceFile);
 	unsigned fragmentShader = abstrShaderConstruct(GL_FRAGMENT_SHADER, fragSourceFile);
 
 	_shaderProgram = abstrShaderProgramConstruct(
-		2,
-		(unsigned[]){vertexShader, fragmentShader}
+		3,
+		(unsigned[]){vertexShader, geometryShader, fragmentShader}
 	);
 
 	// Open STL and extract normals and vertices.
@@ -66,8 +68,6 @@ void renderInit(const char *stlFilename, const char *vertexSourceFile, const cha
     // Unbind VAO.
 	glBindVertexArray(0); 
 
-	// uncomment this call to draw in wireframe polygons.
-	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 	glEnable(GL_DEPTH_TEST);
 }
 
@@ -107,8 +107,8 @@ void renderLoop(float aspectRatio, float horzDeltaRad, float vertDeltaRad)
     glUniformMatrix4fv(projectionLocation, 1, GL_FALSE, (float*)perspectiveMat);
 
     // Fragment shader uniforms.
-	int colorPeriodLocation = glGetUniformLocation(_shaderProgram, "colorPeriod");
-	glUniform1f(colorPeriodLocation, _colorPeriod);
+    int lightPosLocation = glGetUniformLocation(_shaderProgram, "lightPos");
+    glUniform3fv(lightPosLocation, 1, (float*)lightPos);
 
 	glDrawArrays(GL_TRIANGLES, 0, 3*_numTriangles);
 	glBindVertexArray(0);
