@@ -7,12 +7,12 @@
 #include <cglm/cglm.h>
 #include <math.h>
 #include <stdint.h>
+#include <string.h>
 
-static unsigned _vertexShader;
-static unsigned _fragmentShader;
 static unsigned _shaderProgram;
 
-static unsigned _VBO, _VAO;
+static unsigned _VAO;
+static unsigned _VBOs[2];
 
 static uint32_t _numTriangles;
 static float _scale;
@@ -20,25 +20,17 @@ static float _colorPeriod;
 
 void renderInit(const char *stlFilename, const char *vertexSourceFile, const char* fragSourceFile)
 {
-	_vertexShader = abstrShaderConstruct(GL_VERTEX_SHADER, vertexSourceFile);
-	_fragmentShader = abstrShaderConstruct(GL_FRAGMENT_SHADER, fragSourceFile);
+	unsigned vertexShader = abstrShaderConstruct(GL_VERTEX_SHADER, vertexSourceFile);
+	unsigned fragmentShader = abstrShaderConstruct(GL_FRAGMENT_SHADER, fragSourceFile);
 
 	_shaderProgram = abstrShaderProgramConstruct(
 		2,
-		(unsigned[]){_vertexShader, _fragmentShader}
+		(unsigned[]){vertexShader, fragmentShader}
 	);
 
 	// Open STL and extract normals and vertices.
 	stl_data_t stl = stlRead(stlFilename);
 	_numTriangles = stl.polyCount;
-
-	glGenVertexArrays(1, &_VAO);
-	glGenBuffers(1, &_VBO);
-	glBindVertexArray(_VAO);
-
-	// Allocate buffer but don't perform copy yet.
-	glBindBuffer(GL_ARRAY_BUFFER, _VBO);
-	glBufferData(GL_ARRAY_BUFFER, stl.polyCount*9*sizeof(float), stl.vertices, GL_STATIC_DRAW);
 
 	// Find maximum coordinate component.
 	float maxCoord = 0.0f;
@@ -47,17 +39,44 @@ void renderInit(const char *stlFilename, const char *vertexSourceFile, const cha
 		if (component > maxCoord)
 			maxCoord = component;
 	}
-	free(stl.vertices);
-	free(stl.normals);
-
 	_scale = (1.0f / maxCoord) * 0.9f;
 	_colorPeriod = maxCoord / 6.0f;
 
+    // Generate and bind VAO.
+	glGenVertexArrays(1, &_VAO);
+	glBindVertexArray(_VAO);
+
+    // Generate VBOs.
+    glGenBuffers(2, _VBOs);
+    unsigned vertexVBO = _VBOs[0];
+    unsigned normalVBO = _VBOs[1];
+
+    // Allocate and copy vertices to VBO.
+	glBindBuffer(GL_ARRAY_BUFFER, vertexVBO);
+	glBufferData(GL_ARRAY_BUFFER, stl.polyCount*9*sizeof(float), stl.vertices, GL_STATIC_DRAW);
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
 	glEnableVertexAttribArray(0);
+    free(stl.vertices);
 
-	glBindBuffer(GL_ARRAY_BUFFER, 0); 
+    // Duplicate each normal for normal buffer to be same size as vertices.
+    float *dupNormals = (float*)malloc(stl.polyCount*9*sizeof(float));
+    for (int i = 0; i < stl.polyCount; ++i) {
+        float *dstPtr = dupNormals + i * 9;
+        memcpy(dstPtr + 0, stl.normals + i * 3, 3 * sizeof(float));
+        memcpy(dstPtr + 3, stl.normals + i * 3, 3 * sizeof(float));
+        memcpy(dstPtr + 6, stl.normals + i * 3, 3 * sizeof(float));
+    }
+    free(stl.normals);
 
+    // Allocate and copy normals to VBO.
+    glGenBuffers(1, &normalVBO);
+    glBindBuffer(GL_ARRAY_BUFFER, normalVBO);
+	glBufferData(GL_ARRAY_BUFFER, stl.polyCount*9*sizeof(float), dupNormals, GL_STATIC_DRAW);
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(1);
+    free(dupNormals);
+
+    // Unbind VAO.
 	glBindVertexArray(0); 
 
 	// uncomment this call to draw in wireframe polygons.
@@ -104,7 +123,7 @@ void renderLoop(float aspectRatio, float horzDeltaRad, float vertDeltaRad)
 void renderTerminate(void)
 {
 	glDeleteVertexArrays(1, &_VAO);
-	glDeleteBuffers(1, &_VBO);
+	glDeleteBuffers(2, _VBOs);
 	glDeleteProgram(_shaderProgram);
 
 	glfwTerminate();

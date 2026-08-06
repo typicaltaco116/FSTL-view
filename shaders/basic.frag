@@ -1,5 +1,6 @@
 #version 330 core
 in float fragmentDistance;
+in vec3 norm;
 
 uniform float colorPeriod;
 
