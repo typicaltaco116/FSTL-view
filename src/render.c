@@ -9,11 +9,15 @@
 #include <stdint.h>
 #include <string.h>
 
-static unsigned _shaderProgram;
+// Scene parameters. (Global coords)
+vec3 cameraPos = {0.0f, 0.75f, 2.0f};
+vec3 cameraBoresight = {0.0f, 0.5f, 0.0f};
+vec3 modelPos = {0.0f, 0.0f, 0.0f};
+#define CAMERA_FOV_DEG (45.0f)
 
+static unsigned _shaderProgram;
 static unsigned _VAO;
 static unsigned _VBOs[2];
-
 static uint32_t _numTriangles;
 static float _scale;
 static float _colorPeriod;
@@ -39,7 +43,8 @@ void renderInit(const char *stlFilename, const char *vertexSourceFile, const cha
 		if (component > maxCoord)
 			maxCoord = component;
 	}
-	_scale = (1.0f / maxCoord) * 0.9f;
+    // Force max coordinate of the model to be 1.0 in global units.
+	_scale = (1.0f / maxCoord);
 	_colorPeriod = maxCoord / 6.0f;
 
     // Generate and bind VAO.
@@ -96,17 +101,17 @@ void renderLoop(float aspectRatio, float horzDeltaRad, float vertDeltaRad)
 
 	mat4 modelMat;
 	glm_mat4_identity(modelMat);
-	glm_translate_y(modelMat, -0.5f);
-	glm_translate_z(modelMat, -2.0f);
+    glm_translate(modelMat, modelPos);
 	glm_rotate_x(modelMat, vertTheta, modelMat);
 	glm_rotate_y(modelMat, horzTheta, modelMat);
 	glm_scale_uni(modelMat, _scale);
 
     mat4 viewMat;
     glm_mat4_identity(viewMat);
+    glm_lookat(cameraPos, cameraBoresight, GLM_YUP, viewMat);
 
 	mat4 perspectiveMat;
-	glm_perspective(glm_rad(45.0f), aspectRatio, 0.1f, 100.0f, perspectiveMat);
+	glm_perspective(glm_rad(CAMERA_FOV_DEG), aspectRatio, 0.1f, 100.0f, perspectiveMat);
 
 	glUseProgram(_shaderProgram);
 	glBindVertexArray(_VAO);
