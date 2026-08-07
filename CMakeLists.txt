@@ -10,6 +10,7 @@ set(SOURCES
 	${PROJECT_HOME}/src/abstrShader.c
 	${PROJECT_HOME}/src/render.c
 	${PROJECT_HOME}/src/stlRead.c
+	${PROJECT_HOME}/src/input.c
 )
 
 find_package(glfw3 3.3 REQUIRED)

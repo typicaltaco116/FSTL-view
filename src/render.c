@@ -68,7 +68,10 @@ void renderInit(const char *stlFilename, const char *vertexSourceFile, const cha
     // Unbind VAO.
 	glBindVertexArray(0); 
 
+    // Setup openGL settings.
 	glEnable(GL_DEPTH_TEST);
+    glCullFace(GL_BACK);
+    glEnable(GL_CULL_FACE);
 }
 
 void renderLoop(float aspectRatio, float horzDeltaRad, float vertDeltaRad, float deltaScale)
