@@ -16,20 +16,40 @@ vec3 modelPos = {0.0f, 0.0f, 0.0f};
 vec3 lightPos = {1.0f, 4.0f, 0.0f};
 #define CAMERA_FOV_DEG (45.0f)
 
-static unsigned _shaderProgram;
-static unsigned _VAO;
-static unsigned _VBO;
+typedef struct {
+    unsigned program;
+    unsigned VAO;
+    unsigned VBO;
+} renderPipeline_t;
+
+static renderPipeline_t _STLShaderPipeline;
+static unsigned _VAOs[1];
+static unsigned _VBOs[1];
 static uint32_t _numTriangles;
 static float _scale;
-static float _colorPeriod;
 
-void renderInit(const char *stlFilename, const char *vertexSourceFile, const char *geoSourceFile, const char* fragSourceFile)
+static renderPipeline_t initSTLPipeline(const char *stlFilename, const char *shaderPath, unsigned VAO, unsigned VBO)
 {
+    renderPipeline_t pipeline;
+    pipeline.VAO = VAO;
+    pipeline.VBO = VBO;
+
+    // Get shader file paths from shader path.
+	char vertexSourceFile[64];
+    char geoSourceFile[64];
+	char fragSourceFile[64];
+	strcpy(vertexSourceFile, shaderPath);
+	strcpy(geoSourceFile, shaderPath);
+	strcpy(fragSourceFile, shaderPath);
+	strcat(vertexSourceFile, "/basic.vs");
+	strcat(geoSourceFile, "/normals.gs");
+	strcat(fragSourceFile, "/basic.fs");
+
 	unsigned vertexShader = abstrShaderConstruct(GL_VERTEX_SHADER, vertexSourceFile);
     unsigned geometryShader = abstrShaderConstruct(GL_GEOMETRY_SHADER, geoSourceFile);
 	unsigned fragmentShader = abstrShaderConstruct(GL_FRAGMENT_SHADER, fragSourceFile);
 
-	_shaderProgram = abstrShaderProgramConstruct(
+	pipeline.program = abstrShaderProgramConstruct(
 		3,
 		(unsigned[]){vertexShader, geometryShader, fragmentShader}
 	);
@@ -48,18 +68,11 @@ void renderInit(const char *stlFilename, const char *vertexSourceFile, const cha
 	}
     // Force max coordinate of the model to be 1.0 in global units.
 	_scale = (1.0f / maxCoord);
-	_colorPeriod = maxCoord / 6.0f;
 
-    // Generate and bind VAO.
-	glGenVertexArrays(1, &_VAO);
-	glBindVertexArray(_VAO);
-
-    // Generate VBOs.
-    glGenBuffers(1, &_VBO);
-    unsigned vertexVBO = _VBO;
+	glBindVertexArray(VAO);
 
     // Allocate and copy vertices to VBO.
-	glBindBuffer(GL_ARRAY_BUFFER, vertexVBO);
+	glBindBuffer(GL_ARRAY_BUFFER, VBO);
 	glBufferData(GL_ARRAY_BUFFER, stl.polyCount*9*sizeof(float), stl.vertices, GL_STATIC_DRAW);
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
 	glEnableVertexAttribArray(0);
@@ -68,10 +81,35 @@ void renderInit(const char *stlFilename, const char *vertexSourceFile, const cha
     // Unbind VAO.
 	glBindVertexArray(0); 
 
+    return pipeline;
+}
+
+void renderInit(const char *stlFilename, const char *shaderPath)
+{
+	glGenVertexArrays(sizeof(_VAOs)/sizeof(_VAOs[0]), _VAOs);
+	glGenBuffers(sizeof(_VBOs)/sizeof(_VBOs[0]), _VBOs);
+
+    _STLShaderPipeline = initSTLPipeline(stlFilename, shaderPath, _VAOs[0], _VBOs[0]);
+
     // Setup openGL settings.
 	glEnable(GL_DEPTH_TEST);
     glCullFace(GL_BACK);
     glEnable(GL_CULL_FACE);
+}
+
+static void drawSTL(mat4 modelMat, mat4 viewMat, mat4 projectionMat)
+{
+    glUseProgram(_STLShaderPipeline.program);
+    glBindVertexArray(_STLShaderPipeline.VAO);
+
+    abstrShaderSetUniformMatrix4fv(_STLShaderPipeline.program, "model", (float*)modelMat);
+    abstrShaderSetUniformMatrix4fv(_STLShaderPipeline.program, "view", (float*)viewMat);
+    abstrShaderSetUniformMatrix4fv(_STLShaderPipeline.program, "projection", (float*)projectionMat);
+    abstrShaderSetUniform3fv(_STLShaderPipeline.program, "lightPos", (float*)lightPos);
+
+	glDrawArrays(GL_TRIANGLES, 0, 3*_numTriangles);
+
+	glBindVertexArray(0);
 }
 
 void renderLoop(float aspectRatio, float horzDeltaRad, float vertDeltaRad, float deltaScale)
@@ -97,29 +135,17 @@ void renderLoop(float aspectRatio, float horzDeltaRad, float vertDeltaRad, float
     glm_mat4_identity(viewMat);
     glm_lookat(cameraPos, cameraBoresight, GLM_YUP, viewMat);
 
-	mat4 perspectiveMat;
-	glm_perspective(glm_rad(CAMERA_FOV_DEG), aspectRatio, 0.1f, 100.0f, perspectiveMat);
+	mat4 projectionMat;
+	glm_perspective(glm_rad(CAMERA_FOV_DEG), aspectRatio, 0.1f, 100.0f, projectionMat);
 
-	glUseProgram(_shaderProgram);
-	glBindVertexArray(_VAO);
-
-    // Vertex shader uniforms.
-    abstrShaderSetUniformMatrix4fv(_shaderProgram, "model", (float*)modelMat);
-    abstrShaderSetUniformMatrix4fv(_shaderProgram, "view", (float*)viewMat);
-    abstrShaderSetUniformMatrix4fv(_shaderProgram, "projection", (float*)perspectiveMat);
-
-    // Fragment shader uniforms.
-    abstrShaderSetUniform3fv(_shaderProgram, "lightPos", (float*)lightPos);
-
-	glDrawArrays(GL_TRIANGLES, 0, 3*_numTriangles);
-	glBindVertexArray(0);
+    drawSTL(modelMat, viewMat, projectionMat);
 }
 
 void renderTerminate(void)
 {
-	glDeleteVertexArrays(1, &_VAO);
-	glDeleteBuffers(1, &_VBO);
-	glDeleteProgram(_shaderProgram);
+	glDeleteVertexArrays(sizeof(_VAOs)/sizeof(_VAOs[0]), _VAOs);
+	glDeleteBuffers(sizeof(_VBOs)/sizeof(_VBOs[0]), _VBOs);
+	glDeleteProgram(_STLShaderPipeline.program);
 
 	glfwTerminate();
 }

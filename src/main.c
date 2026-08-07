@@ -59,18 +59,7 @@ int main(int argc, char **argv)
     glfwGetFramebufferSize(window, &width, &height);
 	glViewport(0, 0, width, height);
 
-    // Get shader file paths from shader directory.
-	char vertexSourceFile[64];
-    char geoSourceFile[64];
-	char fragSourceFile[64];
-	strcpy(vertexSourceFile, shader_dir);
-	strcpy(geoSourceFile, shader_dir);
-	strcpy(fragSourceFile, shader_dir);
-	strcat(vertexSourceFile, "/basic.vs");
-	strcat(geoSourceFile, "/normals.gs");
-	strcat(fragSourceFile, "/basic.fs");
-
-	renderInit(stl_filename, vertexSourceFile, geoSourceFile, fragSourceFile);
+	renderInit(stl_filename, shader_dir);
 
     inputInit(window);
 

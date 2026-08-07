@@ -1,6 +1,6 @@
 #pragma once
 
-void renderInit(const char *stlFilename, const char *vertexSourceFile, const char *geoSourceFile, const char* fragSourceFile);
+void renderInit(const char *stlFilename, const char *shaderPath);
 
 void renderLoop(float aspectRatio, float horzDeltaRad, float vertDeltaRad, float deltaScale);
 
